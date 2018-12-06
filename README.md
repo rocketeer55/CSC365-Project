@@ -7,5 +7,9 @@ Project A for CSC365
 3. Program should run in the terminal
 
 
-Spencer Schurk
-Jack Goyette
+
+
+
+
+
+<sub>Spencer Schurk, Jack Goyette</sub>

@@ -12,7 +12,7 @@ import java.math.*;
 
 // main function. Contains main program loop
 public class InnReservations {
-   private static Connection conn;
+   public static Connection conn;
 
    private static void createConnection() {
       // Read from file
@@ -52,6 +52,22 @@ public class InnReservations {
       }
    }
 
+   private static void checkTablesExist() {
+      String rooms = "CREATE TABLE IF NOT EXISTS rooms LIKE INN.rooms;";
+      String reservations = "CREATE TABLE IF NOT EXISTS reservations LIKE INN.reservations;";
+
+      try {
+         PreparedStatement roomStatement = conn.prepareStatement(rooms);
+         PreparedStatement reservationsStatement = conn.prepareStatement(reservations);
+
+         roomStatement.execute();
+         reservationsStatement.execute();
+      }
+      catch (Exception e) {
+         System.err.println("Couldn't create tables;");
+         System.err.println(e);
+      }
+   }
 
    // enter main program loop
    public static void main(String args[]) {
@@ -70,7 +86,8 @@ public class InnReservations {
 	      char option = input.nextLine().toLowerCase().charAt(0);
 
          switch(option) {
-            case 'a':   adminLoop();
+            case 'a':   clearScreen();
+                        Admin.adminLoop();
                break;
             case 'o':   ownerLoop();
                break;
@@ -96,57 +113,6 @@ public class InnReservations {
          + "- (G)uest\n"
          + "- (Q)uit\n");
    }
-
-   private static void checkTablesExist() {
-      String rooms = "CREATE TABLE IF NOT EXISTS rooms LIKE INN.rooms;";
-      String reservations = "CREATE TABLE IF NOT EXISTS reservations LIKE INN.reservations;";
-
-
-      try {
-         PreparedStatement roomStatement = conn.prepareStatement(rooms);
-         PreparedStatement reservationsStatement = conn.prepareStatement(reservations);
-
-         roomStatement.execute();
-         reservationsStatement.execute();
-      }
-      catch (Exception e) {
-         System.err.println("Couldn't create tables;");
-         System.err.println(e);
-      }
-
-
-   }
-
-
-
-   // Program loop for admin subsystem
-   private static void adminLoop() {
-      boolean exit = false;
-      Scanner input = new Scanner(System.in);
-
-      while (!exit) {
-         displayAdmin();
-
-         String[] tokens = input.nextLine().toLowerCase().split(" ");
-         char option = tokens[0].charAt(0);
-	      System.out.println("option chosen: " + option);
-
-
-         switch(option) {
-            case 'v':   System.out.println("displayTable\n");
-                        break;
-            case 'c':   System.out.println("clearDB\n");
-                        break;
-            case 'l':   System.out.println("loadDB\n");
-                        break;
-            case 'r':   System.out.println("removeDB\n");
-                        break;
-            case 'b':   exit = true;
-                        break;
-         }
-      }
-   }
-
 
    // Program loop for owner subsystem
    private static void ownerLoop() {
@@ -213,7 +179,7 @@ public class InnReservations {
    }
 
    // Clears the console screen when running interactive
-   private static void clearScreen() {
+   public static void clearScreen() {
       Console c = System.console();
       if (c != null) {
 
@@ -231,26 +197,7 @@ public class InnReservations {
       }
    }
 
-   // Admin UI display
-   private static void displayAdmin() {
 
-      // Clear the screen -- only if it makes sense to do it
-      // clearScreen();
-
-      // Display UI
-      // add your own information for the state of the database
-      System.out.println("Welcome, Admin.\n\n"
-         + "Current Status: " + "<put in state informnation>" + "\n"
-         + "Reservations: " + "<put in count of reservations>" + "\n"
-         + "Rooms: " + "<put in room information>" + "\n\n"
-         + "Choose an option:\n"
-         + "- (V)iew [table name] - Displays table contents\n"
-         + "- (C)lear - Deletes all table contents\n"
-         + "- (L)oad - Loads all table contents\n"
-         + "- (R)emove - Removes tables\n"
-         + "- (B)ack - Goes back to main menu\n");
-
-   }
 
 
    // during the display of a database table you may offer the option

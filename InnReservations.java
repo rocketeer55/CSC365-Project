@@ -17,32 +17,31 @@ public class InnReservations {
    // enter main program loop
    public static void main(String args[]) {
 
-   // eeb: you may want to put various set-up functionality here
+      // eeb: you may want to put various set-up functionality here
 
-   boolean exit = false;
-   Scanner input = new Scanner(System.in);
+      boolean exit = false;
+      Scanner input = new Scanner(System.in);
 
       // clear the screen to freshen up the display
       clearScreen();
       while (!exit) {
-	 displayMain();
+	      displayMain();
 
-	 char option = input.nextLine().toLowerCase().charAt(0);
+	      char option = input.nextLine().toLowerCase().charAt(0);
 
-	 switch(option) {
-	    case 'a':   adminLoop();
-			break;
-	    case 'o':   ownerLoop();
-			break;
-	    case 'g':   guestLoop();
-			break;
-	    case 'q':   exit = true;
-			break;
-	 }
+         switch(option) {
+            case 'a':   adminLoop();
+               break;
+            case 'o':   ownerLoop();
+               break;
+            case 'g':   guestLoop();
+               break;
+            case 'q':   exit = true;
+               break;
+         }
       }
 
       input.close();
-
    }
 
    // Main UI display
@@ -70,7 +69,7 @@ public class InnReservations {
 
          String[] tokens = input.nextLine().toLowerCase().split(" ");
          char option = tokens[0].charAt(0);
-	 System.out.println("option chosen: " + option);
+	      System.out.println("option chosen: " + option);
 
 
          switch(option) {
@@ -158,17 +157,17 @@ public class InnReservations {
       Console c = System.console();
       if (c != null) {
 
-	 // Clear screen for the first time
-	 System.out.print("\033[H\033[2J");
-	 System.out.flush();
-	 //c.writer().print(ESC + "[2J");
-	 //c.flush();
+         // Clear screen for the first time
+         System.out.print("\033[H\033[2J");
+         System.out.flush();
+         //c.writer().print(ESC + "[2J");
+         //c.flush();
 
-	 // Clear the screen again and place the cursor in the top left
-	 System.out.print("\033[H\033[1;1H");
-	 System.out.flush();
-	 //c.writer().print(ESC + "[1;1H");
-	 //c.flush();
+         // Clear the screen again and place the cursor in the top left
+         System.out.print("\033[H\033[1;1H");
+         System.out.flush();
+         //c.writer().print(ESC + "[1;1H");
+         //c.flush();
       }
    }
 
@@ -286,11 +285,11 @@ public class InnReservations {
    private static char revenueData() {
       Scanner input = new Scanner(System.in);
       char opt;
-         System.out.print("Type (c)ount, (d)ays, or (r)evenue to view "
-            + "different table data (or (q)uit to exit): ");
-         opt = input.next().toLowerCase().charAt(0);
+      System.out.print("Type (c)ount, (d)ays, or (r)evenue to view "
+    + "different table data (or (q)uit to exit): ");
+      opt = input.next().toLowerCase().charAt(0);
 
-	 return opt;
+	   return opt;
    }
 
 
@@ -299,24 +298,24 @@ public class InnReservations {
    // view room code or reservations room code or exit
    private static String viewRooms() {
       Scanner input = new Scanner(System.in);
-	 System.out.print("Type (v)iew [room code] or "
+	    System.out.print("Type (v)iew [room code] or "
 	    + "(r)eservations [room code], or (q)uit to exit: ");
 
-	 char option = input.next().toLowerCase().charAt(0);
-	 String roomCode = String.valueOf(option);
-	 if (option != 'q')
-	    roomCode = roomCode + " '" + input.next() + "'";
-	 return roomCode;
+	   char option = input.next().toLowerCase().charAt(0);
+	   String roomCode = String.valueOf(option);
+	   if (option != 'q')
+	      roomCode = roomCode + " '" + input.next() + "'";
+	   return roomCode;
    }
 
    // ask user if they wish to quit
    private static char askIfQuit() {
       Scanner input = new Scanner(System.in);
 
-	 System.out.print("Enter (q)uit to quit: ");
-	 char go = input.next().toLowerCase().charAt(0);
+	   System.out.print("Enter (q)uit to quit: ");
+	   char go = input.next().toLowerCase().charAt(0);
 
-	 return go;
+	   return go;
    }
 
 
@@ -324,10 +323,10 @@ public class InnReservations {
    private static char askIfGoBack() {
       Scanner input = new Scanner(System.in);
 
-	 System.out.print("Enter (b)ack to go back: ");
-	 char go = input.next().toLowerCase().charAt(0);
+	   System.out.print("Enter (b)ack to go back: ");
+	   char go = input.next().toLowerCase().charAt(0);
 
-	 return go;
+	   return go;
    }
 
 
@@ -399,5 +398,4 @@ public class InnReservations {
 
       return dsName;
    }
-
 }

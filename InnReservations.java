@@ -12,18 +12,58 @@ import java.math.*;
 
 // main function. Contains main program loop
 public class InnReservations {
+   private static Connection conn;
+
+   private static void createConnection() {
+      // Read from file
+      Scanner serverSettingsScaller;
+      String address = null;
+      String username = null;
+      String password = null;
+
+      try {
+         serverSettingsScaller = new Scanner(new File("ServerSettings.txt"));
+         address = serverSettingsScaller.nextLine();
+         username = serverSettingsScaller.nextLine();
+         password = serverSettingsScaller.nextLine();
+      }
+      catch (Exception e) {
+         System.err.println("Error reading file \'ServerSettings.txt\'. Please make sure the file exists and is formatted as per the spec.");
+         System.exit(1);
+      }
+
+
+      // Load JDBC driver
+      try {
+         Class.forName("com.mysql.jdbc.Driver").getDeclaredConstructor().newInstance();
+      }
+      catch (Exception e) {
+         System.err.println("Error loading JDBC driver. Did you compile the program correctly?");
+         System.exit(1);
+      }
+
+      // Make mysql connection
+      try {
+         conn = DriverManager.getConnection(address, username, password);
+      }
+      catch (Exception e) {
+         System.err.println("Error connecting to mysql. Credentials provided in \'ServerSettings.txt\' might be incorrect.");
+         System.exit(1);
+      }
+   }
 
 
    // enter main program loop
    public static void main(String args[]) {
 
-      // eeb: you may want to put various set-up functionality here
+      createConnection();
+      checkTablesExist();
 
       boolean exit = false;
       Scanner input = new Scanner(System.in);
 
       // clear the screen to freshen up the display
-      clearScreen();
+      //clearScreen();
       while (!exit) {
 	      displayMain();
 
@@ -55,6 +95,26 @@ public class InnReservations {
          + "- (O)wner\n"
          + "- (G)uest\n"
          + "- (Q)uit\n");
+   }
+
+   private static void checkTablesExist() {
+      String rooms = "CREATE TABLE IF NOT EXISTS rooms LIKE INN.rooms;";
+      String reservations = "CREATE TABLE IF NOT EXISTS reservations LIKE INN.reservations;";
+
+
+      try {
+         PreparedStatement roomStatement = conn.prepareStatement(rooms);
+         PreparedStatement reservationsStatement = conn.prepareStatement(reservations);
+
+         roomStatement.execute();
+         reservationsStatement.execute();
+      }
+      catch (Exception e) {
+         System.err.println("Couldn't create tables;");
+         System.err.println(e);
+      }
+
+
    }
 
 

@@ -29,7 +29,8 @@ public class Owner {
                 case 'd':   InnReservations.clearScreen();
                             revenue(tokens);
                     break;
-                case 's':   System.out.println("browseRes()\n");
+                case 's':   InnReservations.clearScreen();
+                            reservations();
                     break;
                 case 'r':   System.out.println("viewRooms\n");
                     break;
@@ -265,6 +266,130 @@ public class Owner {
         else {
             System.out.println("Option \'" + tokens[2] + "\' is not a valid option.");
         }
+    }
+
+    private static void reservations() {
+        System.out.println("How would you like to search? (dates / room / both)");
+        Scanner input = new Scanner(System.in);
+        String response = input.next().toLowerCase();
+        if (response.equals("dates")) {
+            System.out.println("Please enter the first date (January 1)");
+            String date1 = InnReservations.getDate();
+
+            System.out.println("\nPlease enter the second date (January 2)");
+            String date2 = InnReservations.getDate();
+
+            try {
+                PreparedStatement reservations = InnReservations.conn.prepareStatement(
+                    "SELECT Code, CheckIn, CheckOut " +
+                    "FROM reservations " + 
+                    "WHERE reservations.CheckIn >= (?) AND reservations.CheckIn <= (?);"
+                );
+
+                reservations.setString(1, date1);
+                reservations.setString(2, date2);
+
+                ResultSet reservationsResult = reservations.executeQuery();
+
+                if (reservationsResult.next()) {
+                    System.out.println("\n\nCode  CheckIn  CheckOut");
+                    while (reservationsResult.next()) {
+                        System.out.println(reservationsResult.getString("Code") + "  " + reservationsResult.getString("CheckIn") + "  " + reservationsResult.getString("CheckOut"));
+                    }
+                }
+                else {
+                    System.out.println("No reservations between date " + date1 + " and " + date2);
+                    return;
+                }
+            }
+            catch (Exception e) {
+                System.err.println("Error reading from database");
+                return;
+            }
+        }
+        else if (response.equals("room")) {
+            System.out.println("Please enter the room code (AOB)");
+            String room = input.next().toLowerCase();
+
+            try {
+                PreparedStatement reservations = InnReservations.conn.prepareStatement(
+                    "SELECT Code, CheckIn, CheckOut " +
+                    "FROM reservations " +
+                    "WHERE reservations.Room = (?);"
+                );
+
+                reservations.setString(1, room);
+
+                ResultSet reservationsResult = reservations.executeQuery();
+
+                if (reservationsResult.next()) {
+                    System.out.println("\n\nCode  CheckIn  CheckOut");
+                    while (reservationsResult.next()) {
+                        System.out.println(reservationsResult.getString("Code") + "  " + reservationsResult.getString("CheckIn") + "  " + reservationsResult.getString("CheckOut"));
+                    }
+                }
+                else {
+                    System.out.println("No reservations for room " + room);
+                    return;
+                }
+            }
+            catch (Exception e) {
+                System.err.println("Error reading from database");
+                return;
+            }
+        }
+        else if (response.equals("both")) {
+            System.out.println("Please enter the first date (January 1)");
+            String date1 = InnReservations.getDate();
+
+            System.out.println("\nPlease enter the second date (January 2)");
+            String date2 = InnReservations.getDate();
+
+            System.out.println("Please enter the room code (AOB)");
+            String room = input.next().toLowerCase();
+
+            try {
+                PreparedStatement reservations = InnReservations.conn.prepareStatement(
+                    "SELECT Code, CheckIn, CheckOut " +
+                    "FROM reservations " +
+                    "WHERE reservations.Room = (?) AND reservations.CheckIn >= (?) AND reservations.CheckIn <= (?);"
+                );
+
+                reservations.setString(1, room);
+                reservations.setString(2, date1);
+                reservations.setString(3, date2);
+
+                ResultSet reservationsResult = reservations.executeQuery();
+
+                if (reservationsResult.next()) {
+                    System.out.println("\n\nCode  CheckIn  CheckOut");
+                    while (reservationsResult.next()) {
+                        System.out.println(reservationsResult.getString("Code") + "  " + reservationsResult.getString("CheckIn") + "  " + reservationsResult.getString("CheckOut"));
+                    }
+                }
+                else {
+                    System.out.println("No reservations for room " + room + " between date " + date1 + " and " + date2);
+                    return;
+                }
+            }
+            catch (Exception e) {
+                System.err.println("Error reading from database");
+                return;
+            }
+        }
+        else {
+            System.out.println("Incorrect option \'" + response + "\'");
+            return;
+        }
+
+        System.out.println("\n");
+        response = InnReservations.getReservCodeOrQ();
+        if (response.equals("q")) {
+            InnReservations.clearScreen();
+            return;
+        }
+        reservationInfo(response);
+        System.out.println("\n");
     }
 
     private static String checkAvailability(String room, String date) {

@@ -2,3 +2,4 @@
 .DS_Store
 .vscode
 ServerSettings.txt
+*.sql

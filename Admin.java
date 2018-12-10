@@ -33,7 +33,6 @@ public class Admin {
         }
 
         InnReservations.clearScreen();
-        input.close();
     }
 
     // Admin UI display

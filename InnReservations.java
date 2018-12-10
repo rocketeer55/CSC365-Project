@@ -83,13 +83,14 @@ public class InnReservations {
       while (!exit) {
 	      displayMain();
 
-	      char option = input.nextLine().toLowerCase().charAt(0);
+         char option = input.nextLine().toLowerCase().charAt(0);
 
          switch(option) {
             case 'a':   clearScreen();
                         Admin.adminLoop();
                break;
-            case 'o':   ownerLoop();
+            case 'o':   clearScreen();
+                        Owner.ownerLoop();
                break;
             case 'g':   guestLoop();
                break;
@@ -114,35 +115,7 @@ public class InnReservations {
          + "- (Q)uit\n");
    }
 
-   // Program loop for owner subsystem
-   private static void ownerLoop() {
-      boolean exit = false;
-      Scanner input = new Scanner(System.in);
 
-      while (!exit) {
-         displayOwner();
-
-         String[] tokens = input.nextLine().toLowerCase().split("\\s");
-         char option = tokens[0].charAt(0);
-         char dataOpt = 0;
-
-         if (tokens.length == 2)
-            dataOpt = tokens[1].charAt(0);
-
-         switch(option) {
-            case 'o':   System.out.println("occupancyMenu\n");
-                        break;
-            case 'd':   System.out.println("revenueData\n");
-                        break;
-            case 's':   System.out.println("browseRes()\n");
-                        break;
-            case 'r':   System.out.println("viewRooms\n");
-                        break;
-            case 'b':   exit = true;
-                        break;
-         }
-      }
-   }
 
    // Program loop for guest subsystem
    private static void guestLoop() {
@@ -198,38 +171,18 @@ public class InnReservations {
    }
 
 
-
-
-   // during the display of a database table you may offer the option
-   // to stop the display (since there are many reservations):
-   //    System.out.print("Type (q)uit to exit: ");
-   //    etc.
-
-   // Owner UI display
-   private static void displayOwner() {
-      // Clear the screen
-      // clearScreen();
-
-      // Display UI
-      System.out.println("Welcome, Owner.\n\n"
-         + "Choose an option:\n"
-         + "- (O)ccupancy - View occupancy of rooms\n"
-         + "- (D)ata [(c)ounts|(d)ays|(r)evenue] - View data on "
-            + "counts, days, or revenue of each room\n"
-         + "- (S)tays - Browse list of reservations\n"
-         + "- (R)ooms - View list of rooms\n"
-         + "- (B)ack - Goes back to main menu\n");
-   }
-
-
    // Get a date from input
-   private static String getDate() {
+   public static String getDate() {
       Scanner input = new Scanner(System.in);
 
-      String monthName = input.next();
+      String monthName = input.next().toLowerCase();
+
+      if (monthName.equals("null")) {
+         return null;
+      }
       int month = monthNum(monthName);
       int day = input.nextInt();
-      String date = "'2010-" + month + "-" + day + "'";
+      String date = "2010-" + month + "-" + day;
       return date;
    }
 
@@ -269,7 +222,7 @@ public class InnReservations {
 
 
    // get the room code or a 'q' response to back up the menu
-   private static String getRoomCodeOrQ() {
+   public static String getRoomCodeOrQ() {
       Scanner input = new Scanner(System.in);
       System.out.print("Enter room code for more details "
 	 + "(or (q)uit to exit): ");
@@ -279,7 +232,7 @@ public class InnReservations {
 
 
    // get the reservation code or a 'q' response to back up the menu
-   private static String getReservCodeOrQ() {
+   public static String getReservCodeOrQ() {
       Scanner input = new Scanner(System.in);
       System.out.print("Enter reservation code for more details "
 	 + "(or (q)uit to exit): ");

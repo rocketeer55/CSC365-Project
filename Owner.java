@@ -32,7 +32,8 @@ public class Owner {
                 case 's':   InnReservations.clearScreen();
                             reservations();
                     break;
-                case 'r':   System.out.println("viewRooms\n");
+                case 'r':   InnReservations.clearScreen();
+                            rooms();
                     break;
                 case 'b':   InnReservations.clearScreen();
                             exit = true;
@@ -392,6 +393,144 @@ public class Owner {
         System.out.println("\n");
     }
 
+    private static void rooms() {
+        try {
+            PreparedStatement rooms = InnReservations.conn.prepareStatement(
+                "SELECT RoomId, RoomName " +
+                "FROM rooms;"
+            );
+
+            ResultSet roomsResult = rooms.executeQuery();
+
+            if (roomsResult.next()) {
+                System.out.println("RoomId  RoomName");
+                System.out.println(roomsResult.getString("RoomId") + "  " + roomsResult.getString("RoomName"));
+                while (roomsResult.next()) {
+                    System.out.println(roomsResult.getString("RoomId") + "  " + roomsResult.getString("RoomName"));
+                }
+            }
+            else {
+                System.out.println("No rooms in the database");
+                return;
+            }
+        }
+        catch (Exception e) {
+            System.err.println("Error reading from database");
+            return;
+        }
+
+        System.out.println("\n");
+        String room = InnReservations.getRoomCodeOrQ();
+        if (room.equals("q")) {
+            InnReservations.clearScreen();
+            return;
+        }
+        System.out.println("\nEnter \'f\' to view full information on room " + room + " or \'r\' to view reservations for room " + room);
+        Scanner input = new Scanner(System.in);
+        String result = input.next().toLowerCase();
+        if (result.equals("f")) {
+            try {
+                PreparedStatement roomStatement = InnReservations.conn.prepareStatement(
+                    "SELECT * " +
+                    "FROM rooms " +
+                    "WHERE rooms.RoomId = (?);"
+                );
+
+                PreparedStatement occupancyStatement = InnReservations.conn.prepareStatement(
+                    "SELECT SUM(DATEDIFF(reservations.CheckOut, reservations.CheckIn)) AS nights, " +
+                    "SUM(reservations.Rate * DATEDIFF(reservations.CheckOut, reservations.CheckIn)) AS revenue " +
+                    "FROM reservations " +
+                    "WHERE reservations.Room = (?);"
+                );
+
+                PreparedStatement totalRevenue = InnReservations.conn.prepareStatement(
+                    "SELECT SUM(reservations.Rate * DATEDIFF(reservations.CheckOut, reservations.CheckIn)) AS revenue " +
+                    "FROM reservations;"
+                );
+                
+                roomStatement.setString(1, room);
+                occupancyStatement.setString(1, room);
+
+                ResultSet roomResult = roomStatement.executeQuery();
+                ResultSet occupancyResult = occupancyStatement.executeQuery();
+                ResultSet totalRevenueResult = totalRevenue.executeQuery();
+
+                if (roomResult.next() && occupancyResult.next() && totalRevenueResult.next()) {
+                    System.out.println("\nRoomId  RoomName  Beds  BedType  MaxOcc  BasePrice  Decor  NightsOccupied  PercentOccupied  RoomRevenue  PercentRevenue");
+                    String RoomId = roomResult.getString("RoomId");
+                    String RoomName = roomResult.getString("RoomName");
+                    int Beds = roomResult.getInt("Beds");
+                    String BedType = roomResult.getString("BedType");
+                    int MaxOcc = roomResult.getInt("MaxOcc");
+                    int BasePrice = roomResult.getInt("BasePrice");
+                    String Decor = roomResult.getString("Decor");
+                    int NightsOccupied = occupancyResult.getInt("nights");
+                    double PercentOccupied = NightsOccupied / 365.f;
+                    int RoomRevenue = occupancyResult.getInt("revenue");
+                    double PercentRevenue = (double)RoomRevenue / totalRevenueResult.getInt("revenue");
+                    System.out.println(RoomId + "  " + RoomName + "  " + Beds + "  " + BedType + "  " + MaxOcc + "  " + BasePrice + "  " + 
+                        Decor + "  " + NightsOccupied + "  " + PercentOccupied + "  " + RoomRevenue + "  " + PercentRevenue);
+                }
+                else {
+                    System.out.println("Room " + room + " does not exist");
+                    return;
+                }
+
+                System.out.println("\n\n");
+            }
+            catch (Exception e) {
+                System.err.println("Error reading from database");
+                System.err.println(e);
+                return;
+            }
+        }
+        else if (result.equals("r")) {
+            try {
+                PreparedStatement reservationStatement = InnReservations.conn.prepareStatement(
+                    "SELECT Code, CheckIn, CheckOut " +
+                    "FROM reservations " +
+                    "WHERE reservations.Room = (?) " +
+                    "ORDER BY reservations.CheckIn;"
+                );
+
+                reservationStatement.setString(1, room);
+
+                ResultSet reservationsResult = reservationStatement.executeQuery();
+
+                if (reservationsResult.next()) {
+                    System.out.println("Code  CheckIn  CheckOut");
+                    System.out.println(reservationsResult.getString("Code") + "  " + reservationsResult.getString("CheckIn") + "  " + reservationsResult.getString("CheckOut"));
+                    while (reservationsResult.next()) {
+                        System.out.println(reservationsResult.getString("Code") + "  " + reservationsResult.getString("CheckIn") + "  " + reservationsResult.getString("CheckOut"));
+                    }
+                }
+                else {
+                    System.out.println("No reservations for room " + room);
+                    return;
+                }
+
+                System.out.println("\n");
+                result = InnReservations.getReservCodeOrQ();
+                if (result.equals("q")) {
+                    InnReservations.clearScreen();
+                    return;
+                }
+
+                reservationInfo(result);
+
+                System.out.println("\n\n");
+
+            }
+            catch (Exception e) {
+                System.err.println("Error reading from database");
+                return;
+            }
+        }
+        else {
+            System.out.println("Incorrect option chosen");
+        }
+    }
+
     private static String checkAvailability(String room, String date) {
         try {
             PreparedStatement availability = InnReservations.conn.prepareStatement(
@@ -472,6 +611,7 @@ public class Owner {
             PreparedStatement reservation = InnReservations.conn.prepareStatement(
                 "SELECT * " +
                 "FROM reservations " +
+                    "JOIN rooms ON reservations.Room = rooms.RoomId " +
                 "WHERE reservations.Room = (?) AND reservations.CheckIn <= (?) AND reservations.CheckOut > (?);"
             );
 
@@ -482,17 +622,18 @@ public class Owner {
             ResultSet reservationResults = reservation.executeQuery();
 
             if (reservationResults.next()) {
-                System.out.println("Code  Room  CheckIn  CheckOut  Rate  LastName  FirstName  Adults  Kids");
-                int Code = reservationResults.getInt("Code");
-                String Room = reservationResults.getString("Room");
-                String CheckIn = reservationResults.getString("CheckIn");
-                String CheckOut = reservationResults.getString("CheckOut");
-                int Rate = reservationResults.getInt("Rate");
-                String LastName = reservationResults.getString("LastName");
-                String FirstName = reservationResults.getString("FirstName");
-                int Adults = reservationResults.getInt("Adults");
-                int Kids = reservationResults.getInt("Kids");
-                System.out.println(Code + "  " + Room + "  " + CheckIn + "  " + CheckOut + "  " + Rate + "  " + LastName + "  " + FirstName + "  " + Adults + "  " + Kids);
+                System.out.println("Code  Room  RoomName  CheckIn  CheckOut  Rate  LastName  FirstName  Adults  Kids");
+                int Code = reservationResults.getInt("reservations.Code");
+                String Room = reservationResults.getString("reservations.Room");
+                String RoomName = reservationResults.getString("rooms.RoomName");
+                String CheckIn = reservationResults.getString("reservations.CheckIn");
+                String CheckOut = reservationResults.getString("reservations.CheckOut");
+                int Rate = reservationResults.getInt("reservations.Rate");
+                String LastName = reservationResults.getString("reservations.LastName");
+                String FirstName = reservationResults.getString("reservations.FirstName");
+                int Adults = reservationResults.getInt("reservations.Adults");
+                int Kids = reservationResults.getInt("reservations.Kids");
+                System.out.println(Code + "  " + Room + "  " + RoomName + "  " + CheckIn + "  " + CheckOut + "  " + Rate + "  " + LastName + "  " + FirstName + "  " + Adults + "  " + Kids);
             }
             else {
                 System.out.println("There is no reservation for room " + room + " on date " + date1);
@@ -511,7 +652,8 @@ public class Owner {
         try {
             PreparedStatement res = InnReservations.conn.prepareStatement(
                 "SELECT * " +
-                "FROM reservations " + 
+                "FROM reservations " +
+                    "JOIN rooms ON reservations.Room = rooms.RoomId " +
                 "WHERE reservations.Code = (?);"
             );
 
@@ -520,17 +662,18 @@ public class Owner {
             ResultSet reservationResults = res.executeQuery();
 
             if (reservationResults.next()) {
-                System.out.println("Code  Room  CheckIn  CheckOut  Rate  LastName  FirstName  Adults  Kids");
-                int Code = reservationResults.getInt("Code");
-                String Room = reservationResults.getString("Room");
-                String CheckIn = reservationResults.getString("CheckIn");
-                String CheckOut = reservationResults.getString("CheckOut");
-                int Rate = reservationResults.getInt("Rate");
-                String LastName = reservationResults.getString("LastName");
-                String FirstName = reservationResults.getString("FirstName");
-                int Adults = reservationResults.getInt("Adults");
-                int Kids = reservationResults.getInt("Kids");
-                System.out.println(Code + "  " + Room + "  " + CheckIn + "  " + CheckOut + "  " + Rate + "  " + LastName + "  " + FirstName + "  " + Adults + "  " + Kids);
+                System.out.println("Code  Room  RoomName  CheckIn  CheckOut  Rate  LastName  FirstName  Adults  Kids");
+                int Code = reservationResults.getInt("reservations.Code");
+                String Room = reservationResults.getString("reservations.Room");
+                String RoomName = reservationResults.getString("rooms.RoomName");
+                String CheckIn = reservationResults.getString("reservations.CheckIn");
+                String CheckOut = reservationResults.getString("reservations.CheckOut");
+                int Rate = reservationResults.getInt("reservations.Rate");
+                String LastName = reservationResults.getString("reservations.LastName");
+                String FirstName = reservationResults.getString("reservations.FirstName");
+                int Adults = reservationResults.getInt("reservations.Adults");
+                int Kids = reservationResults.getInt("reservations.Kids");
+                System.out.println(Code + "  " + Room + "  " + RoomName + "  " + CheckIn + "  " + CheckOut + "  " + Rate + "  " + LastName + "  " + FirstName + "  " + Adults + "  " + Kids);
             }
             else {
                 System.out.println("Error finding reservation " + reservation + " in database");

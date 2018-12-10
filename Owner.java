@@ -26,7 +26,8 @@ public class Owner {
                 case 'o':   InnReservations.clearScreen();
                             occupancy();
                     break;
-                case 'd':   System.out.println("revenueData\n");
+                case 'd':   InnReservations.clearScreen();
+                            revenue(tokens);
                     break;
                 case 's':   System.out.println("browseRes()\n");
                     break;
@@ -136,6 +137,133 @@ public class Owner {
             // Error in input
             System.err.println("Error: Entered date(s) formatted incorrectly");
             return;
+        }
+    }
+
+    private static void revenue(String[] tokens) {
+        if (tokens.length < 2) {
+            System.out.println("No option provided");
+            return;
+        }
+        if (tokens[1].toLowerCase().equals("c")) {
+            try {
+                PreparedStatement rooms = InnReservations.conn.prepareStatement(
+                    "SELECT RoomId " +
+                    "FROM rooms"
+                );
+
+                ResultSet roomsResult = rooms.executeQuery();
+
+                int[] sums = new int[13];
+
+                System.out.println("Room  Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec  Total");
+                while (roomsResult.next()) {
+                    String room = roomsResult.getString("RoomId");
+                    System.out.print(room + "  ");
+
+                    int rowSum = 0;
+                    for (int i = 0; i < 12; i++) {
+                        int curr = getCount(room, i + 1);
+                        sums[i]+=curr;
+                        rowSum+=curr;
+                        System.out.print(curr + "  ");
+                    }
+
+                    System.out.print(rowSum + "\n");
+                    sums[12]+= rowSum;
+                }
+
+                System.out.print("Total  ");
+                for (int i = 0; i < sums.length; i++) {
+                    System.out.print(sums[i] + "  ");
+                }
+
+                System.out.println("\n");
+            }
+            catch (Exception e) {
+                System.err.println("Error reading from database");
+            }
+        }
+        else if (tokens[1].toLowerCase().equals("d")) {
+            try {
+                PreparedStatement rooms = InnReservations.conn.prepareStatement(
+                    "SELECT RoomId " +
+                    "FROM rooms"
+                );
+
+                ResultSet roomsResult = rooms.executeQuery();
+
+                int[] sums = new int[13];
+
+                System.out.println("Room  Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec  Total");
+                while (roomsResult.next()) {
+                    String room = roomsResult.getString("RoomId");
+                    System.out.print(room + "  ");
+
+                    int rowSum = 0;
+                    for (int i = 0; i < 12; i++) {
+                        int curr = getDaysOccupied(room, i + 1);
+                        sums[i]+=curr;
+                        rowSum+=curr;
+                        System.out.print(curr + "  ");
+                    }
+
+                    System.out.print(rowSum + "\n");
+                    sums[12]+= rowSum;
+                }
+
+                System.out.print("Total  ");
+                for (int i = 0; i < sums.length; i++) {
+                    System.out.print(sums[i] + "  ");
+                }
+
+                System.out.println("\n");
+            }
+            catch (Exception e) {
+                System.err.println("Error reading from database");
+            }
+        }
+        else if (tokens[1].toLowerCase().equals("r")) {
+            try {
+                PreparedStatement rooms = InnReservations.conn.prepareStatement(
+                    "SELECT RoomId " +
+                    "FROM rooms"
+                );
+
+                ResultSet roomsResult = rooms.executeQuery();
+
+                int[] sums = new int[13];
+
+                System.out.println("Room  Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec  Total");
+                while (roomsResult.next()) {
+                    String room = roomsResult.getString("RoomId");
+                    System.out.print(room + "  ");
+
+                    int rowSum = 0;
+                    for (int i = 0; i < 12; i++) {
+                        int curr = getRevenue(room, i + 1);
+                        sums[i]+=curr;
+                        rowSum+=curr;
+                        System.out.print(curr + "  ");
+                    }
+
+                    System.out.print(rowSum + "\n");
+                    sums[12]+= rowSum;
+                }
+
+                System.out.print("Total  ");
+                for (int i = 0; i < sums.length; i++) {
+                    System.out.print(sums[i] + "  ");
+                }
+
+                System.out.println("\n");
+            }
+            catch (Exception e) {
+                System.err.println("Error reading from database");
+            }
+        }
+        else {
+            System.out.println("Option \'" + tokens[2] + "\' is not a valid option.");
         }
     }
 
@@ -331,6 +459,87 @@ public class Owner {
         catch (Exception e) {
             System.err.println("Error reading from database");
         }
+    }
+
+    private static int getCount(String room, int month) {
+        try {
+            PreparedStatement count = InnReservations.conn.prepareStatement(
+                "SELECT COUNT(*) AS count " +
+                "FROM reservations " +
+                "WHERE reservations.Room = (?) AND MONTH(reservations.CheckOut) = (?);"
+            );
+
+            count.setString(1, room);
+            count.setInt(2, month);
+
+            ResultSet countResults = count.executeQuery();
+
+            if (countResults.next()) {
+                return countResults.getInt("count");
+            }
+            else {
+                return 0;
+            }
+        }
+        catch (Exception e) {
+            System.err.println("Error reading from database");
+        }
+
+        return 0;
+    }
+
+    private static int getDaysOccupied(String room, int month) {
+        try {
+            PreparedStatement days = InnReservations.conn.prepareStatement(
+                "SELECT SUM(DATEDIFF(reservations.CheckOut, reservations.CheckIn)) AS days " +
+                "FROM reservations " +
+                "WHERE reservations.Room = (?) AND MONTH(reservations.CheckOut) = (?);"
+            );
+
+            days.setString(1, room);
+            days.setInt(2, month);
+
+            ResultSet daysResult = days.executeQuery();
+
+            if (daysResult.next()) {
+                return daysResult.getInt("days");
+            }
+            else {
+                return 0;
+            }
+        }
+        catch (Exception e) {
+            System.err.println("Error reading from database");
+        }
+
+        return 0;
+    }
+
+    private static int getRevenue(String room, int month) {
+        try {
+            PreparedStatement revenue = InnReservations.conn.prepareStatement(
+                "SELECT SUM(reservations.Rate * DATEDIFF(reservations.CheckOut, reservations.CheckIn)) AS revenue " +
+                "FROM reservations " +
+                "WHERE reservations.Room = (?) AND MONTH(reservations.CheckOut) = (?);"
+            );
+
+            revenue.setString(1, room);
+            revenue.setInt(2, month);
+
+            ResultSet revenueResult = revenue.executeQuery();
+
+            if (revenueResult.next()) {
+                return revenueResult.getInt("revenue");
+            }
+            else {
+                return 0;
+            }
+        }
+        catch (Exception e) {
+            System.err.println("Error reading from database");
+        }
+
+        return 0;
     }
 
 }
